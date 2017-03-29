@@ -1,5 +1,6 @@
 package com.seth.secondtest.criminalintent;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
@@ -20,6 +21,7 @@ import java.util.List;
 public class CrimeListFragment extends Fragment {
     private RecyclerView mCrimeRecyclerView;
     private CrimeAdapter mAdapter;
+    private int itemClicked = 0;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState){
@@ -33,12 +35,26 @@ public class CrimeListFragment extends Fragment {
         return view;
     }
 
+
+    @Override
+    public void onResume(){
+        super.onResume();
+        updateUI();
+    }
+
+
+
     private void updateUI() {
         CrimeLab crimelab = CrimeLab.get(getActivity());
         List<Crime> crimes = crimelab.getCrimes();
 
-        mAdapter = new CrimeAdapter(crimes);
-        mCrimeRecyclerView.setAdapter(mAdapter);
+        if(mAdapter == null) {
+            mAdapter = new CrimeAdapter(crimes);
+            mCrimeRecyclerView.setAdapter(mAdapter);
+        }else{
+            mAdapter.notifyItemChanged(itemClicked);
+        }
+
     }
 
     private class CrimeHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
@@ -46,6 +62,7 @@ public class CrimeListFragment extends Fragment {
         private TextView mDateTextView;
         private CheckBox mSolvedCheckBox;
         private Crime mCrime;
+        private int mCrimeIndex;
 
         public CrimeHolder(View itemView){
             super(itemView);
@@ -56,8 +73,9 @@ public class CrimeListFragment extends Fragment {
             itemView.setOnClickListener(this);
         }
 
-        public void bindCrime(Crime crime){
+        public void bindCrime(Crime crime,int position){
             mCrime = crime;
+            mCrimeIndex = position;
             mTitleTextView.setText(mCrime.getTitle());
             mDateTextView.setText(mCrime.getDate().toString());
             mSolvedCheckBox.setChecked(mCrime.isSolved());
@@ -65,7 +83,10 @@ public class CrimeListFragment extends Fragment {
 
         @Override
         public void onClick(View v) {
-            Toast.makeText(getActivity(), mCrime.getTitle() + "clicked!" ,Toast.LENGTH_SHORT).show();
+//            Toast.makeText(getActivity(), mCrime.getTitle() + "clicked!" ,Toast.LENGTH_SHORT).show();
+            itemClicked = mCrimeIndex;
+            Intent intent = CrimeActivity.newIntent(getActivity(), mCrime.getId());
+            startActivity(intent);
         }
     }
 
@@ -89,7 +110,7 @@ public class CrimeListFragment extends Fragment {
         @Override
         public void onBindViewHolder(CrimeHolder holder, int position) {
             Crime crime = mCrimes.get(position);
-            holder.bindCrime(crime);
+            holder.bindCrime(crime,position);
         }
 
         @Override
